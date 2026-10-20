@@ -91,8 +91,17 @@ nav .links{display:none}
 /* PRUEBA SOCIAL */
 .proof .award{border:1px solid var(--green);padding:24px;margin:24px 0;text-align:center}
 .proof .award strong{display:block;font-family:var(--serif);font-size:26px;font-weight:400;color:var(--green)}
-.tgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:20px}
-.tgrid img{width:100%;height:auto;border-radius:6px;box-shadow:0 6px 22px rgba(0,0,0,.12)}
+.carousel{position:relative;margin-top:24px}
+.track{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:6px 2px 14px;align-items:center}
+.track::-webkit-scrollbar{display:none}
+.slide{flex:0 0 78%;scroll-snap-align:center}
+.slide img{width:100%;height:auto;border-radius:8px;box-shadow:0 6px 22px rgba(0,0,0,.15)}
+.arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:44px;height:44px;border-radius:50%;border:0;background:var(--green);color:#fff;font-size:20px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.3);transition:.2s}
+.arrow:hover{background:var(--red)}
+.arrow.prev{left:-6px}.arrow.next{right:-6px}
+.dots{display:flex;justify-content:center;gap:8px;margin-top:8px}
+.dots i{width:8px;height:8px;border-radius:50%;background:rgba(16,21,18,.25);transition:.2s}
+.dots i.on{background:var(--red);width:22px;border-radius:8px}
 
 /* SOBRE MI */
 .about{display:grid;gap:30px}
@@ -124,7 +133,8 @@ footer .soc{margin:10px 0;letter-spacing:.2em;text-transform:uppercase;font-size
   .steps{grid-template-columns:1fr 1fr;column-gap:70px}
   .grid{grid-template-columns:repeat(3,1fr);gap:12px}
   .grid img:first-child{grid-column:span 2;grid-row:span 2;aspect-ratio:auto;height:100%}
-  .tgrid{grid-template-columns:repeat(3,1fr);gap:16px}
+  .slide{flex-basis:31%}
+  .arrow.prev{left:-22px}.arrow.next{right:-22px}
   .about{grid-template-columns:.8fr 1.2fr;align-items:center;gap:80px}
   .promise h2{font-size:52px}
   .final h2{font-size:56px}
@@ -230,13 +240,18 @@ footer .soc{margin:10px 0;letter-spacing:.2em;text-transform:uppercase;font-size
       <strong>Campeona Hairstroke Junior · Argentina</strong>
       <span style="font-size:13px">Próxima representante en la final internacional de Italia 2027</span>
     </div>
-    <div class="tgrid">
-      <img loading="lazy" src="https://res.cloudinary.com/djofhtxw/image/upload/v1792518185/01.png" alt="Testimonio 1">
-      <img loading="lazy" src="https://res.cloudinary.com/djofhtxw/image/upload/v1792518151/02.jpg" alt="Testimonio 2">
-      <img loading="lazy" src="https://res.cloudinary.com/djofhtxw/image/upload/v1792518148/03.png" alt="Testimonio 3">
-      <img loading="lazy" src="https://res.cloudinary.com/djofhtxw/image/upload/v1792518146/04.png" alt="Testimonio 4">
-      <img loading="lazy" src="https://res.cloudinary.com/djofhtxw/image/upload/v1792518143/05.png" alt="Testimonio 5">
-      <img loading="lazy" src="https://res.cloudinary.com/djofhtxw/image/upload/v1792518141/06.jpg" alt="Testimonio 6">
+    <div class="carousel" id="car">
+      <button class="arrow prev" aria-label="Anterior">&#8592;</button>
+      <div class="track" id="track">
+        <div class="slide"><img loading="lazy" src="https://res.cloudinary.com/djofhtxw/image/upload/v1792518185/01.png" alt="Testimonio 1"></div>
+        <div class="slide"><img loading="lazy" src="https://res.cloudinary.com/djofhtxw/image/upload/v1792518151/02.jpg" alt="Testimonio 2"></div>
+        <div class="slide"><img loading="lazy" src="https://res.cloudinary.com/djofhtxw/image/upload/v1792518148/03.png" alt="Testimonio 3"></div>
+        <div class="slide"><img loading="lazy" src="https://res.cloudinary.com/djofhtxw/image/upload/v1792518146/04.png" alt="Testimonio 4"></div>
+        <div class="slide"><img loading="lazy" src="https://res.cloudinary.com/djofhtxw/image/upload/v1792518143/05.png" alt="Testimonio 5"></div>
+        <div class="slide"><img loading="lazy" src="https://res.cloudinary.com/djofhtxw/image/upload/v1792518141/06.jpg" alt="Testimonio 6"></div>
+      </div>
+      <button class="arrow next" aria-label="Siguiente">&#8594;</button>
+      <div class="dots" id="dots"></div>
     </div>
   </div>
 </section>
@@ -275,7 +290,28 @@ footer .soc{margin:10px 0;letter-spacing:.2em;text-transform:uppercase;font-size
 <a class="wa-float" href="https://wa.me/5491100000000?text=Hola%20Brenda!%20Quiero%20mi%20asesoramiento%20gratuito" id="wa-float">Diseñemos tus cejas</a>
 
 <script>
-// Todos los botones .btn con data-wa llevan al bloque final (asesoramiento por WhatsApp)
+// Carrusel de testimonios: flechas + deslizar con el dedo (scroll-snap nativo)
+(function(){
+  var t=document.getElementById('track'),d=document.getElementById('dots');
+  var sl=t.querySelectorAll('.slide'),i;
+  for(i=0;i<sl.length;i++){d.appendChild(document.createElement('i'));}
+  var dots=d.children;
+  function step(){return sl[0].getBoundingClientRect().width+14;}
+  function upd(){
+    var n=Math.round(t.scrollLeft/step());
+    for(var k=0;k<dots.length;k++){dots[k].className=k===n?'on':'';}
+  }
+  document.querySelector('.arrow.prev').onclick=function(){
+    if(t.scrollLeft<=2){t.scrollTo({left:t.scrollWidth,behavior:'smooth'});}
+    else{t.scrollBy({left:-step(),behavior:'smooth'});}
+  };
+  document.querySelector('.arrow.next').onclick=function(){
+    if(t.scrollLeft+t.clientWidth>=t.scrollWidth-2){t.scrollTo({left:0,behavior:'smooth'});}
+    else{t.scrollBy({left:step(),behavior:'smooth'});}
+  };
+  t.addEventListener('scroll',upd,{passive:true});
+  upd();
+})();
 </script>
 </body>
 </html>
